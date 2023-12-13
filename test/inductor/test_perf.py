@@ -752,7 +752,6 @@ class InplacingTests(TestCase):
         self.assertExpectedInline(count_numel(f, *inp), """42""")
 
     @requires_cuda()
-    @skipIfRocm
     def test_inplace_triton_kernel_v1(self):
         def f(x: torch.Tensor, y: torch.Tensor):
             output = torch.zeros_like(x)
@@ -765,7 +764,6 @@ class InplacingTests(TestCase):
         self.assertExpectedInline(count_numel(f, *inp), """40""")
 
     @requires_cuda()
-    @skipIfRocm
     def test_inplace_triton_kernel_v2(self):
         def f(x: torch.Tensor, y: torch.Tensor):
             output = torch.zeros_like(x)
@@ -779,7 +777,6 @@ class InplacingTests(TestCase):
         self.assertExpectedInline(count_numel(f, *inp), """60""")
 
     @requires_cuda()
-    @skipIfRocm
     def test_inplace_triton_kernel_v3(self):
         def f(x: torch.Tensor, y: torch.Tensor):
             output = torch.zeros_like(x)
@@ -793,7 +790,6 @@ class InplacingTests(TestCase):
         self.assertExpectedInline(count_numel(f, *inp), """90""")
 
     @requires_cuda()
-    @skipIfRocm
     def test_inplace_triton_kernel_v4(self):
         def f(x: torch.Tensor, y: torch.Tensor):
             x_view = x.view(-1)
@@ -808,7 +804,6 @@ class InplacingTests(TestCase):
         self.assertExpectedInline(count_numel(f, *inp), """60""")
 
     @requires_cuda()
-    @skipIfRocm
     def test_inplace_triton_kernel_v5(self):
         def f(x: torch.Tensor, y: torch.Tensor):
             x_view = x.view(-1)
@@ -823,7 +818,6 @@ class InplacingTests(TestCase):
         self.assertExpectedInline(count_numel(f, *inp), """90""")
 
     @requires_cuda()
-    @skipIfRocm
     def test_inplace_triton_kernel_v6(self):
         def f(x: torch.Tensor, y: torch.Tensor):
             output = torch.zeros_like(x)
