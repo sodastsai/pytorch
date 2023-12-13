@@ -1533,6 +1533,10 @@ class CudaKernelParamCache:
     def get(cls, key: str) -> Optional[Dict[str, str]]:
         return cls.cache.get(key, None)
 
+    @classmethod
+    def get_keys(cls):
+        return cls.cache.keys()
+
 
 class AotCodeCache:
     cache: Dict[str, str] = dict()
@@ -1617,6 +1621,7 @@ class AotCodeCache:
                         compile_file(input_path, output_o, cmd.split())
                         os.chmod(output_o, 0o644)
                     else:
+                        breakpoint()
                         run_command_and_check(cmd)
 
                     def _to_bytes(t: torch.Tensor) -> bytes:
