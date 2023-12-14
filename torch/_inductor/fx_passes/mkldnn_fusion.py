@@ -366,12 +366,71 @@ if torch._C._has_mkldnn:
 
         return fn
 
+    def _get_remaining_users(extra_input_node, compute_node):
+        # Think about this pattern:
+        #      ReLU
+        #     /   \
+        #  Conv1
+        #   /      \
+        # Conv2
+        #   \      /
+        #      Add
+        # Although, the extra input node (ReLU) has more than 1 users: Conv1 and Add.
+        # The Conv1 is the ancestor node of the current compute node (Conv2).
+        # This indicates that the buffer of ReLU has completed all its usage,
+        # So we can safely make changes to it now by doing Conv2->Add inplace fusion.
+        # Take above case as example:
+        # * extra_input_node: ReLU
+        # * compute_node: Conv2
+        # _get_remaining_users will return the users of extra_input_node which are not
+        # ancestor node of compute_node.
+        def _is_ancestor_node(_current_node, _ancestor_node):
+            # Check whether _ancestor_node is the ancestor node of current node
+            if _current_node == _ancestor_node:
+                return True
+            elif isinstance(_current_node, torch.fx.Node):
+                if (
+                    _current_node.op == "placeholder"
+                    or _current_node.op == "output"
+                    or _current_node.op == "get_attr"
+                ):
+                    return False
+                else:
+                    return any(
+                        _is_ancestor_node(input, _ancestor_node)
+                        for input in _current_node.all_input_nodes
+                    )
+            else:
+                return False
+
+        return [
+            user
+            for user in list(extra_input_node.users)
+            if not _is_ancestor_node(compute_node, user)
+        ]
+
     def _is_valid_computation_binary_inplace(computation_op, binary_op, other_index):
         def fn(match):
             if not _is_valid_computation_binary(computation_op, binary_op)(match):
                 return False
             binary_nodes = filter_nodes(match.nodes, binary_op)
-            if any(len(n.args[other_index].users) > 1 for n in binary_nodes):
+
+            def _get_compute_node(_binary_node, _other_index):
+                assert (
+                    len(_binary_node.all_input_nodes) == 2
+                ), "Binary node should have 2 input nodes."
+                _compute_index = 1 if (_other_index == 0) else 0
+                return _binary_node.args[_compute_index]
+
+            if any(
+                len(
+                    _get_remaining_users(
+                        n.args[other_index], _get_compute_node(n, other_index)
+                    )
+                )
+                > 1
+                for n in binary_nodes
+            ):
                 return False
             if any(
                 n.args[other_index].op in ["placeholder", "output"]
