@@ -69,6 +69,7 @@ from torch.testing._internal.common_device_type import (
 )
 from torch._subclasses.fake_tensor import (
     FakeTensor,
+    FakeTensorConfig,
     FakeTensorMode,
 )
 from torch._subclasses.fake_utils import outputs_alias_inputs
@@ -84,6 +85,9 @@ import torch.utils._pytree as pytree
 from torch.utils._python_dispatch import TorchDispatchMode
 
 assert torch.get_default_dtype() == torch.float32
+
+FakeTensorConfig.cache_enabled = True
+FakeTensorConfig.cache_crosscheck_enabled = True
 
 # variant testing is only done with torch.float and torch.cfloat to avoid
 #   excessive test times and maximize signal to noise ratio
